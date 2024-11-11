@@ -4,9 +4,9 @@ import * as Effect from "effect/Effect"
 import * as ExecutionStrategy from "effect/ExecutionStrategy"
 import * as Exit from "effect/Exit"
 import * as HashMap from "effect/HashMap"
+import * as Mailbox from "effect/Mailbox"
 import * as Metric from "effect/Metric"
 import * as Option from "effect/Option"
-import * as Queue from "effect/Queue"
 import * as Ref from "effect/Ref"
 import * as Schema from "effect/Schema"
 import type { Serializable } from "effect/Schema"
@@ -30,7 +30,7 @@ export interface EntityManager {
 }
 
 interface EntityState<Msg extends Envelope.AnyMessage> {
-  readonly mailbox: Queue.Queue<MailboxStorage.Entry<Msg>>
+  readonly mailbox: Mailbox.Mailbox<MailboxStorage.Entry<Msg>>
   readonly scope: Scope.CloseableScope
 }
 
@@ -87,8 +87,7 @@ export const make = <Msg extends Envelope.AnyMessage>(
         succeed: (message, value) => complete(message, Exit.succeed(value)),
         fail: (message, error) => complete(message, Exit.fail(error)),
         failCause: (message, cause) => complete(message, Exit.failCause(cause)),
-        complete,
-        completeEffect: (message, effect) => Effect.exit(effect).pipe(Effect.flatMap((exit) => complete(message, exit)))
+        done: complete
       } as const
     }
 
@@ -147,7 +146,7 @@ export const make = <Msg extends Envelope.AnyMessage>(
               // Create the mailbox for the entity
               Effect.bind("mailbox", ({ scope }) =>
                 Effect.tap(
-                  Queue.unbounded<MailboxStorage.Entry<Msg>>(),
+                  Mailbox.make<MailboxStorage.Entry<Msg>>(),
                   (mailbox) => Scope.addFinalizer(scope, mailbox.shutdown)
                 )),
               // Initiate the behavior for the entity
@@ -201,10 +200,11 @@ export const make = <Msg extends Envelope.AnyMessage>(
     }
 
     function send(envelope: Envelope.Encoded): Effect.Effect<void, EntityNotManagedByPod | MalformedMessage> {
-      return decodeEnvelope(envelope).pipe(
-        Effect.bindTo("envelope"),
-        Effect.bind("entry", ({ envelope }) => storage.saveMessage(envelope.address, envelope.message)),
-        Effect.flatMap(({ entry, envelope }) => sendMessageToEntity(envelope.address, entry)),
+      return Effect.gen(function*() {
+        const decodedEnvelope = yield* decodeEnvelope(envelope)
+        const entry = yield* storage.saveMessage(decodedEnvelope.address, decodedEnvelope.message)
+        yield* sendMessageToEntity(decodedEnvelope.address, entry)
+      }).pipe(
         Effect.catchTags({
           NoSuchElementException: () => Effect.void,
           ParseError: (cause) => new MalformedMessage({ cause }),

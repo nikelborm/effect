@@ -6,8 +6,8 @@ import type { Effect } from "effect/Effect"
 import * as Equal from "effect/Equal"
 import type { Exit } from "effect/Exit"
 import * as Hash from "effect/Hash"
+import type { ReadonlyMailbox } from "effect/Mailbox"
 import * as Predicate from "effect/Predicate"
-import type { Dequeue } from "effect/Queue"
 import type { Serializable, WithResult } from "effect/Schema"
 import * as Schema from "effect/Schema"
 import { EntityType } from "./EntityType.js"
@@ -72,7 +72,7 @@ export declare namespace Entity {
    */
   export interface Behavior<Msg extends Envelope.AnyMessage> {
     (
-      mailbox: Dequeue<MailboxStorage.Entry<Msg>>,
+      mailbox: ReadonlyMailbox<MailboxStorage.Entry<Msg>>,
       replier: Replier
     ): Effect<never>
   }
@@ -106,17 +106,10 @@ export declare namespace Entity {
     /**
      * Completes specified message with the provided `Exit`.
      */
-    readonly complete: <Msg extends Envelope.AnyMessage>(
+    readonly done: <Msg extends Envelope.AnyMessage>(
       message: Msg,
       result: Exit<WithResult.Success<Msg>, WithResult.Failure<Msg>>
     ) => Effect<void>
-    /**
-     * Completes specified message with the result of the provided `Effect`.
-     */
-    readonly completeEffect: <Msg extends Envelope.AnyMessage, R>(
-      message: Msg,
-      effect: Effect<WithResult.Success<Msg>, WithResult.Failure<Msg>, R>
-    ) => Effect<void, never, R | WithResult.Context<Msg>>
   }
 }
 
