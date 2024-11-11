@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type { WithResult } from "@effect/schema/Serializable"
 import type { Effect } from "effect/Effect"
+import type { WithResult } from "effect/Schema"
 import type { Envelope } from "./Envelope.js"
 
 /**

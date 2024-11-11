@@ -1,13 +1,12 @@
 /**
  * @since 1.0.0
  */
-import type { ParseError } from "@effect/schema/ParseResult"
-import * as Schema from "@effect/schema/Schema"
-import * as Serializable from "@effect/schema/Serializable"
 import type { Effect } from "effect/Effect"
+import type { ParseError } from "effect/ParseResult"
 import * as Predicate from "effect/Predicate"
 import type { PrimaryKey } from "effect/PrimaryKey"
 import type * as Request from "effect/Request"
+import * as Schema from "effect/Schema"
 import { EntityAddress } from "./EntityAddress.js"
 
 const SymbolKey = "@effect/cluster/Envelope"
@@ -53,8 +52,8 @@ export declare namespace Envelope {
     extends PrimaryKey, Schema.TaggedRequest<string, any, any, any, any, any, any, any, unknown>
   {
     [Request.RequestTypeId]: any
-    [Serializable.symbol]: any
-    [Serializable.symbolResult]: any
+    [Schema.symbolSerializable]: any
+    [Schema.symbolWithResult]: any
   }
 
   /**
@@ -110,11 +109,11 @@ export const serialize = <Msg extends Envelope.AnyMessage>(
 ): Effect<
   Envelope.Encoded,
   ParseError,
-  Serializable.Serializable.Context<Msg>
+  Schema.Serializable.Context<Msg>
 > => {
   const schema = Schema.Struct({
     address: EntityAddress,
-    message: Serializable.selfSchema(envelope.message)
+    message: Schema.serializableSchema(envelope.message)
   })
   return Schema.encode(schema)(envelope) as any
 }

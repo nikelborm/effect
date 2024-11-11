@@ -1,5 +1,3 @@
-import * as Schema from "@effect/schema/Schema"
-import type * as Serializable from "@effect/schema/Serializable"
 import * as Clock from "effect/Clock"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
@@ -10,6 +8,8 @@ import * as Metric from "effect/Metric"
 import * as Option from "effect/Option"
 import * as Queue from "effect/Queue"
 import * as Ref from "effect/Ref"
+import * as Schema from "effect/Schema"
+import type { Serializable } from "effect/Schema"
 import * as Scope from "effect/Scope"
 import type { Entity } from "../Entity.js"
 import { EntityAddress } from "../EntityAddress.js"
@@ -43,7 +43,7 @@ export const make = <Msg extends Envelope.AnyMessage>(
   EntityManager,
   never,
   | Scope.Scope
-  | Serializable.Serializable.Context<Msg>
+  | Serializable.Context<Msg>
   | MailboxStorage
   | Sharding
   | ShardingConfig
@@ -53,7 +53,7 @@ export const make = <Msg extends Envelope.AnyMessage>(
     const sharding = yield* InternalShardingCircular.Tag
     const storage = yield* InternalMailboxStorage.Tag
     const managerScope = yield* Effect.scope
-    const runtime = yield* Effect.runtime<Serializable.Serializable.Context<Msg>>()
+    const runtime = yield* Effect.runtime<Serializable.Context<Msg>>()
     const semaphore = yield* Effect.makeSemaphore(1)
     const gauge = InternalMetrics.entities.pipe(Metric.tagged("type", entity.type))
 
@@ -72,8 +72,8 @@ export const make = <Msg extends Envelope.AnyMessage>(
       function complete<Msg extends Envelope.AnyMessage>(
         message: Msg,
         result: Exit.Exit<
-          Serializable.WithResult.Success<Msg>,
-          Serializable.WithResult.Failure<Msg>
+          Schema.WithResult.Success<Msg>,
+          Schema.WithResult.Failure<Msg>
         >
       ) {
         const state = InternalMessageState.processed(result)

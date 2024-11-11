@@ -1,12 +1,12 @@
 /**
  * @since 1.0.0
  */
-import type { Serializable, WithResult } from "@effect/schema/Serializable"
 import type { SqlClient } from "@effect/sql/SqlClient"
 import type { NoSuchElementException } from "effect/Cause"
 import type { Tag } from "effect/Context"
 import type { Effect } from "effect/Effect"
 import type { Layer } from "effect/Layer"
+import type { Serializable, WithResult } from "effect/Schema"
 import type { EntityAddress } from "./EntityAddress.js"
 import type { EntityId } from "./EntityId.js"
 import type { EntityType } from "./EntityType.js"

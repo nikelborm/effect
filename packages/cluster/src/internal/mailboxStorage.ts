@@ -1,5 +1,3 @@
-import * as Schema from "@effect/schema/Schema"
-import * as Serializable from "@effect/schema/Serializable"
 import * as SqlClient from "@effect/sql/SqlClient"
 import type * as SqlError from "@effect/sql/SqlError"
 import * as SqlSchema from "@effect/sql/SqlSchema"
@@ -9,6 +7,8 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as PrimaryKey from "effect/PrimaryKey"
+import * as Schema from "effect/Schema"
+import type { Serializable } from "effect/Schema"
 import * as String from "effect/String"
 import type { EntityAddress } from "../EntityAddress.js"
 import { EntityId } from "../EntityId.js"
@@ -230,9 +230,9 @@ export const makeSql: Effect.Effect<
   ): Effect.Effect<
     MailboxStorage.MailboxStorage.Entry<Msg>,
     NoSuchElementException | MessagePersistenceError,
-    Serializable.Serializable.Context<Msg>
+    Serializable.Context<Msg>
   > =>
-    Serializable.serialize(message).pipe(
+    Schema.serialize(message).pipe(
       Effect.flatMap((messageBody) =>
         insert({
           shardId: address.shardId,
@@ -244,7 +244,7 @@ export const makeSql: Effect.Effect<
       ),
       Effect.flatten,
       Effect.flatMap((entry) =>
-        Serializable.deserialize(message, entry.message).pipe(
+        Schema.deserialize(message, entry.message).pipe(
           Effect.map((message) => ({ ...entry, message }))
         )
       ),
@@ -252,14 +252,14 @@ export const makeSql: Effect.Effect<
         ParseError: (cause) => new MessagePersistenceError({ address, cause }),
         SqlError: (cause) => new MessagePersistenceError({ address, cause })
       })
-    )
+    ) as any
 
   const updateMessage = <Msg extends Envelope.AnyMessage>(
     address: EntityAddress,
     message: Msg,
     state: MessageState.MessageState<
-      Serializable.WithResult.Success<Msg>,
-      Serializable.WithResult.Failure<Msg>
+      Schema.WithResult.Success<Msg>,
+      Schema.WithResult.Failure<Msg>
     >
   ): Effect.Effect<void> => {
     const params = {
@@ -271,7 +271,7 @@ export const makeSql: Effect.Effect<
     return MessageState.match(state, {
       onAcknowledged: () => acknowledge(params),
       onProcessed: (exit) =>
-        Serializable.serializeExit(message, exit).pipe(
+        Schema.serializeExit(message, exit).pipe(
           Effect.flatMap((messageResult) => complete({ ...params, messageResult }))
         ) as any
     }).pipe(Effect.orDie)

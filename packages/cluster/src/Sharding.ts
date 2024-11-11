@@ -1,11 +1,11 @@
 /**
  * @since 1.0.0
  */
-import type { Serializable } from "@effect/schema/Serializable"
 import type { Tag } from "effect/Context"
 import type { Duration } from "effect/Duration"
 import type { Effect } from "effect/Effect"
 import type { HashSet } from "effect/HashSet"
+import type { Serializable } from "effect/Schema"
 import type { Scope } from "effect/Scope"
 import type { Stream } from "effect/Stream"
 import type { Entity } from "./Entity.js"

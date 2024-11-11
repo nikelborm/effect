@@ -1,8 +1,6 @@
 /**
  * @since 1.0.0
  */
-import * as Schema from "@effect/schema/Schema"
-import type { Serializable, WithResult } from "@effect/schema/Serializable"
 import type { Cause } from "effect/Cause"
 import type { Effect } from "effect/Effect"
 import * as Equal from "effect/Equal"
@@ -10,6 +8,8 @@ import type { Exit } from "effect/Exit"
 import * as Hash from "effect/Hash"
 import * as Predicate from "effect/Predicate"
 import type { Dequeue } from "effect/Queue"
+import type { Serializable, WithResult } from "effect/Schema"
+import * as Schema from "effect/Schema"
 import { EntityType } from "./EntityType.js"
 import type { Envelope } from "./Envelope.js"
 import type { MailboxStorage } from "./MailboxStorage.js"

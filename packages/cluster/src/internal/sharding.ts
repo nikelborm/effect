@@ -1,5 +1,3 @@
-import * as Schema from "@effect/schema/Schema"
-import type * as Serializable from "@effect/schema/Serializable"
 import * as Effect from "effect/Effect"
 import * as Equal from "effect/Equal"
 import * as ExecutionStrategy from "effect/ExecutionStrategy"
@@ -11,6 +9,7 @@ import * as Option from "effect/Option"
 import * as PubSub from "effect/PubSub"
 import * as Ref from "effect/Ref"
 import * as Runtime from "effect/Runtime"
+import * as Schema from "effect/Schema"
 import * as Scope from "effect/Scope"
 import * as Stream from "effect/Stream"
 import type { Entity } from "../Entity.js"
@@ -110,7 +109,7 @@ const make = Effect.gen(function*() {
     entity: Entity<Msg>,
     behavior: Entity.Behavior<Msg>,
     options?: Sharding.Sharding.RegistrationOptions
-  ): Effect.Effect<void, never, Serializable.Serializable.Context<Msg>> {
+  ): Effect.Effect<void, never, Schema.Serializable.Context<Msg>> {
     return Scope.fork(shardingScope, ExecutionStrategy.sequential).pipe(
       Effect.bindTo("scope"),
       Effect.bind("manager", ({ scope }) =>
@@ -159,10 +158,10 @@ const make = Effect.gen(function*() {
   function makeMessenger<Msg extends Envelope.Envelope.AnyMessage>(entity: Entity<Msg>): Effect.Effect<
     Messenger<Msg>,
     never,
-    Serializable.Serializable.Context<Msg>
+    Schema.Serializable.Context<Msg>
   > {
     return Effect.gen(function*() {
-      const runtime = yield* Effect.runtime<Serializable.Serializable.Context<Msg>>()
+      const runtime = yield* Effect.runtime<Schema.Serializable.Context<Msg>>()
 
       function sendMessage(entityIdentifier: string, message: Msg) {
         const entityId = EntityId.make(entityIdentifier)
