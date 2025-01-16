@@ -1,5 +1,47 @@
 # effect
 
+## 3.12.5
+
+### Patch Changes
+
+- [#4259](https://github.com/Effect-TS/effect/pull/4259) [`507d546`](https://github.com/Effect-TS/effect/commit/507d546bd49db31000425fb5da88c434e4291bea) Thanks @gcanti! - Schema: improve error messages for invalid transformations
+
+  **Before**
+
+  ```ts
+  import { Schema } from "effect"
+
+  Schema.decodeUnknownSync(Schema.NumberFromString)("a")
+  /*
+  throws:
+  ParseError: NumberFromString
+  └─ Transformation process failure
+     └─ Expected NumberFromString, actual "a"
+  */
+  ```
+
+  **After**
+
+  ```ts
+  import { Schema } from "effect"
+
+  Schema.decodeUnknownSync(Schema.NumberFromString)("a")
+  /*
+  throws:
+  ParseError: NumberFromString
+  └─ Transformation process failure
+     └─ Unable to decode "a" into a number
+  */
+  ```
+
+- [#4257](https://github.com/Effect-TS/effect/pull/4257) [`8db239b`](https://github.com/Effect-TS/effect/commit/8db239b9c869a3707f6566b9d9dbdf53c4df03fc) Thanks @gcanti! - Schema: Correct `BigInt` and `BigIntFromNumber` identifier annotations to follow naming conventions
+
+- [#4267](https://github.com/Effect-TS/effect/pull/4267) [`3179a9f`](https://github.com/Effect-TS/effect/commit/3179a9f65d23369a6a9a1f80f7750566dd28df22) Thanks @tim-smart! - ensure DateTime.Zoned produces valid dates
+
+- [#4264](https://github.com/Effect-TS/effect/pull/4264) [`6cb9b76`](https://github.com/Effect-TS/effect/commit/6cb9b766396d0b2ed995cf26957359713efd202e) Thanks @gcanti! - Relocate the `Issue` definition from `platform/HttpApiError` to `Schema` (renamed as `ArrayFormatterIssue`).
+
+- [#4266](https://github.com/Effect-TS/effect/pull/4266) [`1fcbe55`](https://github.com/Effect-TS/effect/commit/1fcbe55345042d8468f6a98c84081bd00b6bcf5a) Thanks @gcanti! - Schema: Replace the `TimeZoneFromSelf` interface with a class definition and fix the arbitraries for `DateTimeUtcFromSelf` and `DateTimeZonedFromSelf` (`fc.date({ noInvalidDate: true })`).
+
 ## 3.12.4
 
 ### Patch Changes
