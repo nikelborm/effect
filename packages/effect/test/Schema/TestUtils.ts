@@ -121,7 +121,7 @@ export const expectArbitrary = <A, I>(schema: S.Schema<A, I, never>, n: number =
 }
 
 export const roundtrip = <A, I>(schema: S.Schema<A, I, never>, params?: Parameters<typeof fc.assert>[1]) => {
-  if (true as boolean) {
+  if (false as boolean) {
     return
   }
   const arb = A.makeLazy(schema)

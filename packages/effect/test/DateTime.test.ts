@@ -420,19 +420,4 @@ describe("DateTime", () => {
     const dt = DateTime.unsafeMakeZoned(date)
     assert.deepStrictEqual(dt.zone, DateTime.zoneMakeOffset(60 * 60 * 1000))
   })
-
-  it.only("toDate", () => {
-    const isValidDate = (date: Date) => !Number.isNaN(date.getTime())
-
-    const zoned1 = DateTime.unsafeMakeZoned(8639999999999989, { timeZone: 12 })
-    const zoned2 = DateTime.unsafeMakeZoned(8639999992800001, { timeZone: "Africa/Kigali" })
-
-    // expect(isValidDate(DateTime.toDate(zoned1))).toBe(true)
-    // expect(isValidDate(DateTime.toDate(zoned2))).toBe(true)
-
-    const arb = Arbitrary.make(Schema.DateTimeZonedFromSelf)
-    FastCheck.assert(
-      FastCheck.property(arb, (zoned) => isValidDate(DateTime.toDate(zoned)))
-    )
-  })
 })

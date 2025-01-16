@@ -7,8 +7,15 @@ describe("DateTimeZoned", () => {
   const schema = S.DateTimeZoned
   const dt = DateTime.unsafeMakeZoned(0, { timeZone: "Europe/London" })
 
-  it("property tests", () => {
-    Util.roundtrip(schema)
+  it.only("property tests", () => {
+    // Util.roundtrip(schema)
+
+    // Failing seed, producing DateTime.Zoned(0001-12-31T23:59:59.999+8751:20[Pacific/Pitcairn])
+    Util.roundtrip(schema, {
+      seed: -1896245275,
+      path: "2:1:0:0:0:0:0:0:3:1:3:1:0:4:1:0:2:1:1:1:3:0:0:1:1:0:0:0:0:1",
+      verbose: true
+    })
   })
 
   it("decoding", async () => {
