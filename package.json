@@ -63,7 +63,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
-    "glob": "^11.0.2",
+    "glob": "^11.1.0",
     "jscodeshift": "^17.3.0",
     "madge": "^8.0.0",
     "playwright": "^1.52.0",
