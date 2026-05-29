@@ -1102,7 +1102,41 @@ const go = (ast: AST.AST, isDecoding: boolean): Parser => {
     }
     case "TypeLiteral": {
       if (ast.propertySignatures.length === 0 && ast.indexSignatures.length === 0) {
-        return fromRefinement(ast, Predicate.isNotNullable)
+        return (input, options) => {
+          if (!Predicate.isNotNullable(input)) {
+            return Either.left(new Type(ast, input))
+          }
+          if (Predicate.isRecord(input)) {
+            const onExcessPropertyError = options?.onExcessProperty === "error"
+            if (onExcessPropertyError) {
+              const reportAllErrors = options?.errors === "all"
+              const keys = Reflect.ownKeys(input)
+              const unexpectedPropertyIssues: Array<[number, ParseIssue]> = []
+              let stepKey = 0
+              for (const key of keys) {
+                const pointer = new Pointer(
+                  key,
+                  input,
+                  new Unexpected(input[key], `is unexpected, expected: never`)
+                )
+                if (reportAllErrors) {
+                  unexpectedPropertyIssues.push([stepKey++, pointer])
+                } else {
+                  return Either.left(new Composite(ast, input, pointer, {}))
+                }
+              }
+              if (Arr.isNonEmptyArray(unexpectedPropertyIssues)) {
+                return Either.left(
+                  new Composite(ast, input, sortByIndex(unexpectedPropertyIssues), {})
+                )
+              }
+            }
+            if (options?.onExcessProperty !== "preserve") {
+              return Either.right({})
+            }
+          }
+          return Either.right(input)
+        }
       }
 
       const propertySignatures: Array<readonly [Parser, AST.PropertySignature]> = []
