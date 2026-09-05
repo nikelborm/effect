@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest"
-import { Data, DateTime, Effect, Fiber, FileSystem, Layer, Match, Path, Queue, Redacted } from "effect"
+import { Data, DateTime, Effect, Fiber, FileSystem, Layer, Match, Path, Queue, Redacted, Stream } from "effect"
 import { Prompt } from "effect/unstable/cli"
 import * as MockTerminal from "./services/MockTerminal.ts"
 
@@ -1183,6 +1183,79 @@ describe("Prompt.custom", () => {
       const result = yield* Prompt.run(prompt)
       assert.strictEqual(result, 3)
     }).pipe(Effect.provide(TestLayer)))
+
+  // it.effect("doesn't stop consuming terminal input if event queue is done", () =>
+  //   Effect.gen(function*() {
+  //     const eventQueue = yield* Queue.make<string, Cause.Done>()
+  //     const intro = "Hi, John!\n\n"
+  //     const outro = "\n\nLooking forward for your response, good bye!"
+
+  //     const putCursorInTheMiddle
+
+  //     "Hi, John! I got your letter!\n\n\n\nLooking forward for your response, good bye!"
+
+      // const prompt = Prompt.custom(
+      //   { sum: 'hello' },
+      //   Queue.asDequeue(eventQueue),
+      //   {
+      //     render: (state) => Effect.succeed(`Keys: ${state.keys}`),
+      //     process: (input, state) =>
+      //       Match.value(input).pipe(
+      //         Match.tag("Input", () => {
+      //           const next = state.keys + 1
+      //           return next >= 3
+      //             ? Effect.succeed(Action.Submit({ value: next }))
+      //             : Effect.succeed(Action.NextFrame({ state: { keys: next } }))
+      //         }),
+      //         Match.tag("Event", (event) => Effect.succeed(Action.NextFrame({ state: event.value }))),
+      //         Match.exhaustive
+      //       ),
+      //     clear: () => Effect.succeed("")
+      //   }
+      // )
+
+  //     const promptFiber = yield* Prompt.run(prompt).pipe(Effect.forkChild)
+
+  //     yield* Effect.gen(function*() {
+  //       yield* Queue.offer(eventQueue, 'z')
+  //       yield* Effect.sleep('100 millis')
+  //       yield* Queue.offer(eventQueue, 'x')
+  //       yield* Effect.sleep('100 millis')
+  //       yield* Queue.end(eventQueue)
+  //     } ).pipe(Effect.forkChild)
+
+
+
+  //     // Give the prompt loop time to start and block on the race
+  //     yield* Effect.yieldNow
+
+  //     // Push two events
+  //     yield* Queue.offer(eventQueue, "tick")
+  //     yield* Effect.yieldNow
+  //     yield* Queue.offer(eventQueue, "tock")
+  //     yield* Effect.yieldNow
+  //     yield* Queue.offer(eventQueue, "tick")
+  //     yield* Effect.yieldNow
+
+  //     // Submit via keypress
+  //     yield* MockTerminal.inputKey("enter")
+
+  //     Effect.gen(function*() {
+  //       yield* Queue.offer(eventQueue, 'z')
+  //       yield* Effect.sleep('100 millis')
+  //       yield* Queue.offer(eventQueue, 'x')
+  //       yield* Effect.sleep('100 millis')
+  //       yield* Queue.end(eventQueue)
+  //     } ).pipe(Effect.runFork)
+
+  //     yield* MockTerminal.inputKey("a")
+  //     yield* MockTerminal.inputKey("b")
+  //     yield* MockTerminal.inputKey("c")
+
+  //     const result = yield* Prompt.run(prompt)
+  //     console.log(result)
+  //     assert.strictEqual(result, 3)
+  //   }).pipe(Effect.provide(TestLayer)))
 
   it.effect("Input variant exposes the input field with UserInput", () =>
     Effect.gen(function*() {

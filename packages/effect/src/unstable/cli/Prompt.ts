@@ -889,14 +889,14 @@ export const custom: {
   ): Prompt<Output>
   <State, Output, A>(
     initialState: State | Effect.Effect<State, never, Environment>,
-    events: Queue.Dequeue<A, never>,
+    events: Queue.Dequeue<A, Cause.Done>,
     handlers: Handlers<State, Output, ProcessInput<A>>
   ): Prompt<Output>
 } = <State, Output, A>(
   initialState: State | Effect.Effect<State, never, Environment>,
   ...args:
     | [handlers: Handlers<State, Output, Terminal.UserInput>]
-    | [events: Queue.Dequeue<A, never>, handlers: Handlers<State, Output, ProcessInput<A>>]
+    | [events: Queue.Dequeue<A, Cause.Done>, handlers: Handlers<State, Output, ProcessInput<A>>]
 ): Prompt<Output> => {
   const [events, handlers] = args.length === 1
     ? [undefined, args[0]] as const
