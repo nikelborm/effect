@@ -1298,10 +1298,6 @@ const prepareTools = Effect.fnUntraced(
     readonly tools: ReadonlyArray<AnthropicUserDefinedTool | AnthropicProviderDefinedTool> | undefined
     readonly toolChoice: typeof Generated.BetaToolChoice.Encoded | undefined
   }, AiError.AiError> {
-    if (options.tools.length === 0 || options.toolChoice === "none") {
-      return { tools: undefined, toolChoice: undefined }
-    }
-
     // Return a JSON response tool when using non-native structured outputs
     if (options.responseFormat.type === "json" && !capabilities.supportsStructuredOutput) {
       const input_schema = yield* tryJsonSchema(options.responseFormat.schema, "prepareTools")
@@ -1319,6 +1315,10 @@ const prepareTools = Effect.fnUntraced(
           disable_parallel_tool_use: true
         }
       }
+    }
+
+    if (options.tools.length === 0 || options.toolChoice === "none") {
+      return { tools: undefined, toolChoice: undefined }
     }
 
     const userTools: Array<AnthropicUserDefinedTool> = []
@@ -1575,6 +1575,9 @@ const makeResponse = Effect.fnUntraced(
     const mcpToolCalls: Map<string, Response.ToolCallPartEncoded> = new Map()
     const serverToolCalls: Map<string, string> = new Map()
     const citableDocuments = extractCitableDocuments(options.prompt)
+    const responseFormat = options.responseFormat
+    const hasStructuredOutputTool = responseFormat.type === "json" &&
+      rawResponse.content.some((part) => part.type === "tool_use" && part.name === responseFormat.objectName)
 
     parts.push({
       type: "response-metadata",
@@ -1587,10 +1590,12 @@ const makeResponse = Effect.fnUntraced(
     for (const part of rawResponse.content) {
       switch (part.type) {
         case "text": {
-          // Text parts are added for both text and json response formats.
-          // For native structured output (json_schema), the JSON comes directly
-          // in a text content block. For tool-based structured output, text may
-          // also be present alongside the tool_use.
+          // The response tool supplies the JSON payload. Accompanying prose
+          // must not be concatenated with it during structured output decoding.
+          if (hasStructuredOutputTool) {
+            break
+          }
+
           parts.push({
             type: "text",
             text: part.text
@@ -1637,7 +1642,7 @@ const makeResponse = Effect.fnUntraced(
         case "tool_use": {
           // When the `"json"` response format is requested, the JSON we need
           // is returned by a tool call injected into the request
-          if (options.responseFormat.type === "json") {
+          if (responseFormat.type === "json" && part.name === responseFormat.objectName) {
             parts.push({
               type: "text",
               text: JSON.stringify(part.input)
