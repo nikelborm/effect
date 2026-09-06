@@ -6730,7 +6730,7 @@ export const prettyLoggerBrowser = (options?: {
   readonly colors?: "auto" | boolean | undefined
   readonly formatDate?: ((date: Date) => string) | undefined
 }) => {
-  const showColors = Boolean(options?.colors)
+  const showColors = options?.colors !== false
   const color = showColors ? "%c" : ""
   const formatDate = options?.formatDate ?? defaultDateFormat
   return loggerMake<unknown, void>(
