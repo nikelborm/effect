@@ -765,10 +765,16 @@ export const batched = dual<
  * **Example** (Logging with pretty console output)
  *
  * ```ts import.meta.vitest
- * import { Logger } from "effect"
+ * import { Effect, Logger } from "effect"
  *
- * const prettyLogger = Logger.consolePretty({ colors: false })
- * Logger.isLogger(prettyLogger) // => true
+ * const prettyLogger = Logger.layer([Logger.consolePretty()])
+ *
+ * Effect.log("hello").pipe(
+ *   Effect.withLogSpan('label'),
+ *   Effect.annotateLogs('key', 'value'),
+ *   Effect.provide(prettyLogger),
+ *   Effect.runSync
+ * )
  * ```
  *
  * @category constructors
@@ -798,10 +804,16 @@ export const consolePretty: (
  * **Example** (Logging with pretty console output)
  *
  * ```ts import.meta.vitest
- * import { Logger } from "effect"
+ * import { Effect, Logger } from "effect"
  *
- * const prettyLogger = Logger.consolePrettyBrowser({ colors: false })
- * Logger.isLogger(prettyLogger) // => true
+ * const prettyLogger = Logger.layer([Logger.consolePrettyBrowser()])
+ *
+ * Effect.log("hello").pipe(
+ *   Effect.withLogSpan('label'),
+ *   Effect.annotateLogs('key', 'value'),
+ *   Effect.provide(prettyLogger),
+ *   Effect.runSync
+ * )
  * ```
  *
  * @category constructors
@@ -828,10 +840,16 @@ export const consolePrettyBrowser: (
  * **Example** (Logging with pretty console output)
  *
  * ```ts import.meta.vitest
- * import { Logger } from "effect"
+ * import { Effect, Logger } from "effect"
  *
- * const prettyLogger = Logger.consolePrettyTty({ colors: false })
- * Logger.isLogger(prettyLogger) // => true
+ * const prettyLogger = Logger.layer([Logger.consolePrettyTty()])
+ *
+ * Effect.log("hello").pipe(
+ *   Effect.withLogSpan('label'),
+ *   Effect.annotateLogs('key', 'value'),
+ *   Effect.provide(prettyLogger),
+ *   Effect.runSync
+ * )
  * ```
  *
  * @category constructors
