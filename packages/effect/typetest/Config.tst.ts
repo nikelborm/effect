@@ -22,6 +22,23 @@ describe("Config", () => {
     expect(c3).type.toBe<Config.Config<"a" | "b" | "c">>()
   })
 
+  it("flatMap", () => {
+    const c = Config.schema(Schema.Literals(["a", "b"]))
+
+    const c1 = c.pipe(Config.flatMap(() => Config.succeed("c" as const)))
+    expect(c1).type.toBe<Config.Config<"c">>()
+
+    const c2 = Config.flatMap(c, () => Config.succeed("c" as const))
+    expect(c2).type.toBe<Config.Config<"c">>()
+
+    const c3 = c.pipe(Config.flatMap((v) =>
+      v === "a"
+        ? Config.succeed("c" as const)
+        : Config.succeed(v)
+    ))
+    expect(c3).type.toBe<Config.Config<"b" | "c">>()
+  })
+
   it("type level helpers", () => {
     const c = Config.schema(Schema.Literals(["a", "b"]))
 

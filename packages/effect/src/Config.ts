@@ -148,11 +148,12 @@ function make<T>(
   return self
 }
 
-const evaluateAt = <T>(
-  self: Config<T>,
+const evaluateAt = <T extends Config<unknown>>(
+  self: T,
   provider: ConfigProvider.ConfigProvider,
   pathPrefix: Path
-): Effect.Effect<Resolution<T>, ConfigError> => (self as ConfigImpl<T>).evaluator(provider, pathPrefix)
+): Effect.Effect<Resolution<ExtractConfig<T>>, ConfigError> =>
+  (self as unknown as ConfigImpl<ExtractConfig<T>>).evaluator(provider, pathPrefix)
 
 /**
  * Transforms the parsed value of a config with a pure function.
@@ -187,6 +188,8 @@ export const map: {
   return make((provider, pathPrefix) => Effect.map(evaluateAt(self, provider, pathPrefix), Result.map(f)))
 })
 
+export type ExtractConfig<T extends Config<unknown>> = T extends Config<infer I> ? I : never
+
 /**
  * Lets you sequence multiple configs that depend on each other or branch to
  * multiple different configs depending on the parent.
@@ -210,14 +213,17 @@ export const map: {
  *     ...["dev", "development", "DEV", "DEVELOPMENT"] as const
  *   ], name)
  *
- * const withAbsenceFallback = <A, B>(fallback: Config.Config<A>) => (self: Config.Config<B>): Config.Config<A | B> =>
- *   Config.flatMap(
- *     Config.option(self),
- *     Option.match({
- *       onNone: () => fallback,
- *       onSome: Config.succeed<A | B>
- *     })
- *   )
+ * // A demonstration of how absence information could be exposed to the mapping
+ * // function. Use Config.orElseIfAbsence in real code instead to achieve the
+ * // same behavior
+ * const absenceSymbol = Symbol('Absence')
+ * const withAbsenceFallback =
+ *   <A>(fallback: Config.Config<A>) =>
+ *   <B>(self: Config.Config<B>): Config.Config<A | B> =>
+ *     Config.flatMap(
+ *       Config.withDefault(self, absenceSymbol),
+ *       (e) => e === absenceSymbol ? fallback : Config.succeed<A | B>(e)
+ *     )
  *
  * // const ENV: Config.Config<"dev" | "prod">
  * const ENV = EnvVar("ENV").pipe(
@@ -248,19 +254,30 @@ export const map: {
  * @since 4.0.0
  */
 export const flatMap: {
-  <A, B>(f: (a: A) => Config<B>): (self: Config<A>) => Config<B>
-  <A, B>(self: Config<A>, f: (a: A) => Config<B>): Config<B>
-} = dual(2, <A, B>(self: Config<A>, f: (a: A) => Config<B>): Config<B> => {
-  return make((provider, pathPrefix) =>
-    Effect.flatMap(
-      evaluateAt(self, provider, pathPrefix),
-      Result.match({
-        onSuccess: (success) => evaluateAt(f(success), provider, pathPrefix),
-        onFailure: (error) => Effect.succeed(Result.fail(error))
-      })
+  <A extends Config<unknown>, B extends Config<unknown>>(
+    f: (a: ExtractConfig<A>) => B
+  ): (self: A) => Config<ExtractConfig<B>>
+  <A extends Config<unknown>, B extends Config<unknown>>(
+    self: A,
+    f: (a: ExtractConfig<A>) => B
+  ): Config<ExtractConfig<B>>
+} = dual(
+  2,
+  <A extends Config<unknown>, B extends Config<unknown>>(
+    self: A,
+    f: (a: ExtractConfig<A>) => B
+  ): Config<ExtractConfig<B>> => {
+    return make((provider, pathPrefix) =>
+      Effect.flatMapEager(
+        evaluateAt(self, provider, pathPrefix),
+        Result.match({
+          onSuccess: (success) => evaluateAt(f(success), provider, pathPrefix),
+          onFailure: (error) => Effect.succeed(Result.fail(error))
+        })
+      )
     )
-  )
-})
+  }
+)
 
 /**
  * Transforms the parsed value with a function that may fail.
@@ -350,11 +367,32 @@ export const orElse: {
   return make<A | A2>((provider, pathPrefix) =>
     Effect.matchEffect(evaluateAt(self, provider, pathPrefix), {
       onFailure: (error) => evaluateAt(that(error), provider, pathPrefix),
-      onSuccess: (resolution): Effect.Effect<Resolution<A | A2>, ConfigError> =>
+      onSuccess: (resolution) =>
         Result.isFailure(resolution)
           ? evaluateAt(that(resolution.failure), provider, pathPrefix)
-          : Effect.succeed(resolution)
+          : Effect.succeed<Resolution<A | A2>>(resolution)
     })
+  )
+})
+
+/**
+ * Provides a fallback config exclusively when the previous one is missing.
+ *
+ * @category combinators
+ * @since 4.0.0
+ */
+export const orElseIfAbsent: {
+  <A>(fallback: Config<A>): <B>(self: Config<B>) => Config<A | B>
+  <A, B>(self: Config<A>, fallback: Config<B>): Config<A | B>
+} = dual(2, <A, B>(self: Config<A>, fallback: Config<B>): Config<A | B> => {
+  return make((provider, pathPrefix) =>
+    Effect.flatMapEager(
+      evaluateAt(self, provider, pathPrefix),
+      Result.match({
+        onSuccess: (success) => Effect.succeed(Result.succeed(success)),
+        onFailure: () => evaluateAt<A | B>(fallback, provider, pathPrefix)
+      })
+    )
   )
 })
 
